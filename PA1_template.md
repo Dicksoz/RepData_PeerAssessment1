@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
@@ -12,7 +7,8 @@ output:
 
       Below is a summary of the structure of the data
 
-```{r, echo=TRUE}
+
+```r
       if(!file.exists("activity.csv")) {
             unzip("activity.zip")
       }
@@ -25,16 +21,41 @@ output:
       str(data)
 ```
 
+```
+## 'data.frame':	17568 obs. of  4 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+##  $ time    : Factor w/ 288 levels "00:00","00:05",..: 1 2 3 4 5 6 7 8 9 10 ...
+```
+
 
 ## What is mean total number of steps taken per day?
 
       To find the mean total number of steps taken every day one must first take the sum of all the steps taken over each day, and then average these. The aggregate and mean functions are employed below to accomplish this. A histogram of the total number of steps as well ad the mean and then the median are reported below.
 
-```{r, echo = TRUE}
+
+```r
       totalData <- aggregate(list(Daily.Steps =data$steps), list(Date = data$date),FUN = sum)
       hist(totalData$Daily.Steps)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
+
+```r
       mean(totalData$Daily.Steps, na.rm = TRUE)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
       median(totalData$Daily.Steps, na.rm = TRUE)
+```
+
+```
+## [1] 10765
 ```
 
 
@@ -42,30 +63,45 @@ output:
 ## What is the average daily activity pattern?
 
       To find the average pattern of steps taken over the day, the average number of steps for each 5 minute interval for each of the days is calculated using the aggregate function.
-```{r, echo = TRUE}
+
+```r
       aggData <- aggregate(list(Steps =data$steps), list(Time = data$time),FUN = mean, na.rm = TRUE)
 ```
 
       The average steps is then plotted against the time of day. the code to generate the plot is below.
       
-```{r, echo = TRUE}
+
+```r
       plot(aggData$Time,aggData$Steps)
       lines(aggData$Time,aggData$Steps)
       title(main = "Average Steps Taken Pattern", xlab = "Time of Day", ylab = "Steps Taken")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+
 The 5 minute interval containing the highest number of steps on average began at the below time.
 
-```{r, echo = TRUE}
+
+```r
       aggData$Time[aggData$Steps == max(aggData$Steps)]
+```
+
+```
+## [1] 08:35
+## 288 Levels: 00:00 00:05 00:10 00:15 00:20 00:25 00:30 00:35 00:40 ... 23:55
 ```
 
 ## Imputing missing values
 
       There are a number of missing values in the data set. Below, this number is calculated by first finding the number of complete cases (Where all columns in the row are not NA). This generates a logical vector, taking the sum of the inverse this vector (treating TRUE as 1 and FALSE as 0) will give us our numb er of incomplete cases.
 
-```{r, echo = TRUE}
+
+```r
       sum(!complete.cases(data))
+```
+
+```
+## [1] 2304
 ```
 
       To fill in the missing values the following will be assumed:
@@ -74,7 +110,8 @@ The 5 minute interval containing the highest number of steps on average began at
       Values for missing intervals will be imputed by taking the mean of the mean number of steps for that interval over all days and any existing, non-missing neighbours. Two passes are made to reduce bias from sequentially filling in values. The first replaces NA values with the mean for their respective intervals over all days. The second averages this with the existing, non-missing neighbours. As all the dates are consecutive the last and first of each day are valid neighbours.
       The final number of missing values is outputed at the bottom of this chunk.
       
-```{r, echo = TRUE}
+
+```r
       imputedData <- data
       missing <- integer()
       for(i in 1:nrow(data)) {
@@ -98,21 +135,43 @@ The 5 minute interval containing the highest number of steps on average began at
       sum(!complete.cases(imputedData))
 ```
 
+```
+## [1] 0
+```
+
       
       A histogram as well as the mean and median steps taken per day when including the imputed values are below.
       
-```{r, echo = TRUE}
+
+```r
       totalData <- aggregate(list(Daily.Steps = imputedData$steps), list(Date = imputedData$date),FUN = sum)
       hist(totalData$Daily.Steps)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+
+```r
       mean(totalData$Daily.Steps, na.rm = TRUE)
+```
+
+```
+## [1] 10766.05
+```
+
+```r
       median(totalData$Daily.Steps, na.rm = TRUE)
+```
+
+```
+## [1] 10765
 ```
 
       The mean and median do not vary much from those calculated without imputted values. the median is unchanged, whereas the mean is slightly lower. This is likely due to the imputting methodology. Using the means for the other days well not change the mean and median values, and the few places where differences are created are on the boundry between days, where normally very few steps are registered.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r, echo = TRUE}
+
+```r
       imputedData$day.type = factor(weekdays(imputedData$date) == "Sunday" | weekdays(imputedData$date) == "Saturday", labels = c("Weekday","Weekend"))
       aggData <- aggregate(list(Steps = imputedData$steps),list(Time = imputedData$time, DayType = imputedData$day.type), FUN = mean)
       par(mfrow = c(1,2))
@@ -122,5 +181,7 @@ The 5 minute interval containing the highest number of steps on average began at
       plot(aggData$Time[aggData$DayType == "Weekend"],aggData$Steps[aggData$DayType == "Weekend"], ylim = c(0,200))
       lines(aggData$Time[aggData$DayType == "Weekend"],aggData$Steps[aggData$DayType == "Weekend"])
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
 
       There appears to be no major difference in the position and durations of peaks between weekends and weekdays. However the heights do vary. There appears to be less steps taken in the mornings on the weekend.
